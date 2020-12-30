@@ -18,14 +18,14 @@ class Generator(tf.keras.Model):
         self.use_equalized_layers = use_equalized_layers
 
         self.blocks = {
-            2:
+            '2':
                 GeneratorBaseBlock(filters=Generator._nf(stage=1),
                                    use_equalized_layers=use_equalized_layers,
                                    name='depth-2')
         }
 
         for stage in range(2, self.max_depth):
-            self.blocks[stage + 1] = GeneratorUpsampleBlock(
+            self.blocks[str(stage + 1)] = GeneratorUpsampleBlock(
                 filters=Generator._nf(stage=stage),
                 use_equalized_layers=use_equalized_layers,
                 name='depth-{}'.format(stage + 1))
@@ -34,8 +34,8 @@ class Generator(tf.keras.Model):
                                                        interpolation='nearest')
 
         self.to_rgb_blocks = {
-            i + 1: ToRGBBlock(use_equalized_layers=use_equalized_layers,
-                              name='depth-{}'.format(i + 1))
+            str(i + 1): ToRGBBlock(use_equalized_layers=use_equalized_layers,
+                                   name='depth-{}'.format(i + 1))
             for i in range(1, self.max_depth)
         }
 
@@ -44,17 +44,17 @@ class Generator(tf.keras.Model):
         y = noise
 
         if self.current_depth == self.min_depth:
-            y = self.blocks[self.current_depth](y)
-            return self.to_rgb_blocks[self.current_depth](y)
+            y = self.blocks[str(self.current_depth)](y)
+            return self.to_rgb_blocks[str(self.current_depth)](y)
 
         for depth in range(self.min_depth, self.current_depth):
-            y = self.blocks[depth](y)
+            y = self.blocks[str(depth)](y)
 
         residual = \
-            self.upscale_2x(self.to_rgb_blocks[self.current_depth - 1](y))
+            self.upscale_2x(self.to_rgb_blocks[str(self.current_depth - 1)](y))
 
-        straight = self.blocks[self.current_depth](y)
-        straight = self.to_rgb_blocks[self.current_depth](straight)
+        straight = self.blocks[str(self.current_depth)](y)
+        straight = self.to_rgb_blocks[str(self.current_depth)](straight)
         return (1 - alpha) * residual + alpha * straight
 
     @staticmethod
