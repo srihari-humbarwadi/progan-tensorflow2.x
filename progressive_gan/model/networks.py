@@ -21,21 +21,21 @@ class Generator(tf.keras.Model):
             '2':
                 GeneratorBaseBlock(filters=Generator._nf(stage=1),
                                    use_equalized_layers=use_equalized_layers,
-                                   name='depth-2')
+                                   name='depth-2-conv-block')
         }
 
         for stage in range(2, self.max_depth):
             self.blocks[str(stage + 1)] = GeneratorUpsampleBlock(
                 filters=Generator._nf(stage=stage),
                 use_equalized_layers=use_equalized_layers,
-                name='depth-{}'.format(stage + 1))
+                name='depth-{}-conv-block'.format(stage + 1))
 
-        self.upscale_2x = tf.keras.layers.UpSampling2D(size=2,
-                                                       interpolation='nearest')
+        self.upscale_2x = tf.keras.layers.UpSampling2D(
+            size=2, interpolation='nearest', name='nearest-2x-upsampling')
 
         self.to_rgb_blocks = {
             str(i + 1): ToRGBBlock(use_equalized_layers=use_equalized_layers,
-                                   name='depth-{}'.format(i + 1))
+                                   name='depth-{}-to-rgb'.format(i + 1))
             for i in range(1, self.max_depth)
         }
 

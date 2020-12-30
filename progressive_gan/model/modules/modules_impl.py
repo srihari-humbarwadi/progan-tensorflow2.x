@@ -20,8 +20,14 @@ class GeneratorBaseBlock(tf.keras.layers.Layer):
 
         self.pixel_norm = PixelwiseNorm()
         self.leaky_relu = tf.keras.layers.LeakyReLU(alpha=0.2)
-        self.dense = dense_layer(units=filters * 4 * 4)
-        self.conv = conv_layer(filters=filters, kernel_size=3, padding='same')
+        self.dense = dense_layer(
+            units=filters * 4 * 4,
+            name='{}-latent-projection'.format(self.name))
+        self.conv = conv_layer(
+            filters=filters,
+            kernel_size=3,
+            padding='same',
+            name='{}-conv-3x3'.format(self.name))
 
     def call(self, x):
         y = tf.expand_dims(tf.expand_dims(x, axis=1), axis=1)
@@ -52,12 +58,21 @@ class GeneratorUpsampleBlock(tf.keras.layers.Layer):
         conv_layer = \
             EqualizedConv2d if use_equalized_layers else tf.keras.layers.Conv2D
 
-        self.pixel_norm = PixelwiseNorm()
-        self.leaky_relu = tf.keras.layers.LeakyReLU(alpha=0.2)
-        self.conv_1 = conv_layer(filters=filters, kernel_size=3, padding='same')
-        self.conv_2 = conv_layer(filters=filters, kernel_size=3, padding='same')
-        self.upscale_2x = tf.keras.layers.UpSampling2D(size=2,
-                                                       interpolation='nearest')
+        self.pixel_norm = PixelwiseNorm(name='{}-pixel-norm'.format(self.name))
+        self.leaky_relu = tf.keras.layers.LeakyReLU(
+            alpha=0.2, name='{}-leaky-relu'.format(self.name))
+        self.conv_1 = conv_layer(
+            filters=filters, kernel_size=3,
+            padding='same',
+            name='{}-conv-3x3-1'.format(self.name))
+        self.conv_2 = conv_layer(
+            filters=filters, kernel_size=3,
+            padding='same',
+            name='{}-conv-3x3-2'.format(self.name))
+        self.upscale_2x = tf.keras.layers.UpSampling2D(
+            size=2,
+            interpolation='nearest',
+            name='{}-nearest-2x-upsampling'.format(self.name))
 
     def call(self, x):
         y = self.upscale_2x(x)
@@ -84,7 +99,10 @@ class ToRGBBlock(tf.keras.layers.Layer):
         conv_layer = \
             EqualizedConv2d if use_equalized_layers else tf.keras.layers.Conv2D
 
-        self.conv = conv_layer(filters=3, kernel_size=1)
+        self.conv = conv_layer(
+            filters=3,
+            kernel_size=1,
+            name='{}-conv-1x1'.format(self.name))
 
     def call(self, x):
         return self.conv(x)
