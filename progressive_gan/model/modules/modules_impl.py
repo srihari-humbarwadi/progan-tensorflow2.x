@@ -18,11 +18,16 @@ class GeneratorBaseBlock(tf.keras.layers.Layer):
         conv_layer = \
             EqualizedConv2d if use_equalized_layers else tf.keras.layers.Conv2D
 
-        self.pixel_norm = PixelwiseNorm()
-        self.leaky_relu = tf.keras.layers.LeakyReLU(alpha=0.2)
+        self.pixel_norm = PixelwiseNorm(name='{}-pixel-norm'.format(self.name))
+
+        self.leaky_relu = tf.keras.layers.LeakyReLU(
+            alpha=0.2,
+            name='{}-leaky-relu'.format(self.name))
+
         self.dense = dense_layer(
             units=filters * 4 * 4,
             name='{}-latent-projection'.format(self.name))
+
         self.conv = conv_layer(
             filters=filters,
             kernel_size=3,
@@ -59,16 +64,21 @@ class GeneratorUpsampleBlock(tf.keras.layers.Layer):
             EqualizedConv2d if use_equalized_layers else tf.keras.layers.Conv2D
 
         self.pixel_norm = PixelwiseNorm(name='{}-pixel-norm'.format(self.name))
+
         self.leaky_relu = tf.keras.layers.LeakyReLU(
-            alpha=0.2, name='{}-leaky-relu'.format(self.name))
+            alpha=0.2,
+            name='{}-leaky-relu'.format(self.name))
+
         self.conv_1 = conv_layer(
             filters=filters, kernel_size=3,
             padding='same',
             name='{}-conv-3x3-1'.format(self.name))
+
         self.conv_2 = conv_layer(
             filters=filters, kernel_size=3,
             padding='same',
             name='{}-conv-3x3-2'.format(self.name))
+
         self.upscale_2x = tf.keras.layers.UpSampling2D(
             size=2,
             interpolation='nearest',
@@ -124,10 +134,25 @@ class DiscriminatorDownsampleBlock(tf.keras.layers.Layer):
         conv_layer = \
             EqualizedConv2d if use_equalized_layers else tf.keras.layers.Conv2D
 
-        self.leaky_relu = tf.keras.layers.LeakyReLU(alpha=0.2)
-        self.conv_1 = conv_layer(filters=filters, kernel_size=3, padding='same')
-        self.conv_2 = conv_layer(filters=filters, kernel_size=3, padding='same')
-        self.downsample_2x = tf.keras.layers.AveragePooling2D(pool_size=2)
+        self.leaky_relu = tf.keras.layers.LeakyReLU(
+            alpha=0.2,
+            name='{}-leaky-relu'.format(self.name))
+
+        self.conv_1 = conv_layer(
+            filters=filters,
+            kernel_size=3,
+            padding='same',
+            name='{}-conv-3x3-1'.format(self.name))
+
+        self.conv_2 = conv_layer(
+            filters=filters,
+            kernel_size=3,
+            padding='same',
+            name='{}-conv-3x3-2'.format(self.name))
+
+        self.downsample_2x = tf.keras.layers.AveragePooling2D(
+            pool_size=2,
+            name='{}-avgpool2d-2x-downsampling'.format(self.name))
 
     def call(self, x):
         y = self.leaky_relu(self.conv_1(x))
@@ -160,16 +185,29 @@ class DiscriminatorFinalBlock(tf.keras.layers.Layer):
         conv_layer = \
             EqualizedConv2d if use_equalized_layers else tf.keras.layers.Conv2D
 
-        self.leaky_relu = tf.keras.layers.LeakyReLU(alpha=0.2)
+        self.leaky_relu = tf.keras.layers.LeakyReLU(
+            alpha=0.2,
+            name='{}-leaky-relu'.format(self.name))
+
         self.mini_batch_stddev = MiniBatchStandardDeviation(
-            group_size=group_size)
-        self.conv_1 = conv_layer(filters=filters, kernel_size=3, padding='same')
+            group_size=group_size,
+            name='{}-minibatch_stddev'.format(self.name))
+
+        self.conv_1 = conv_layer(
+            filters=filters,
+            kernel_size=3,
+            padding='same',
+            name='{}-conv-3x3-1'.format(self.name))
+
         self.conv_2 = conv_layer(filters=filters,
                                  kernel_size=4,
-                                 padding='valid')
-        self.conv_3 = conv_layer(filters=1,
-                                 kernel_size=1,
-                                 padding='valid')
+                                 padding='valid',
+                                 name='{}-conv-4x4-2'.format(self.name))
+        self.conv_3 = conv_layer(
+            filters=1,
+            kernel_size=1,
+            padding='valid',
+            name='{}-conv-1x1-3'.format(self.name))
 
         self.flatten = tf.keras.layers.Flatten()
 
@@ -201,12 +239,16 @@ class FromRGBBlock(tf.keras.layers.Layer):
         conv_layer = \
             EqualizedConv2d if use_equalized_layers else tf.keras.layers.Conv2D
 
+        self.leaky_relu = tf.keras.layers.LeakyReLU(
+            alpha=0.2,
+            name='{}-leaky-relu'.format(self.name))
+
         self.conv = conv_layer(filters=filters,
                                kernel_size=1,
                                name='{}-conv-1x1'.format(self.name))
 
     def call(self, x):
-        return self.conv(x)
+        return self.leaky_relu(self.conv(x))
 
     def get_config(self):
         config = {
