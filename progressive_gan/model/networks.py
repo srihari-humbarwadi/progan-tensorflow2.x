@@ -1,3 +1,4 @@
+from absl import logging
 import numpy as np
 import tensorflow as tf
 
@@ -39,6 +40,11 @@ class Generator(tf.keras.Model):
             for i in range(1, self.max_depth)
         }
 
+        self._current_depth = tf.Variable(self.current_depth,
+                                          trainable=False,
+                                          name='current_depth',
+                                          dtype=tf.uint8)
+
     def call(self, x):
         noise, alpha = x
         y = noise
@@ -60,3 +66,25 @@ class Generator(tf.keras.Model):
     @staticmethod
     def _nf(stage, fmap_base=8192, fmap_max=512, fmap_decay=1.0):
         return min(int(fmap_base / (2.0**(stage * fmap_decay))), fmap_max)
+
+    def assign_depth(self, depth):
+        depth = int(depth)
+        if depth != self.current_depth:
+            logging.info('Changing depth from {} to {}'.format(
+                self.current_depth, depth))
+            self.current_depth = depth
+            self._current_depth.assign(depth)
+
+    def increment_depth(self):
+        assert self.current_depth != self.max_depth + 1, 'Max Depth Exceeded'
+        logging.info('Incrementing depth from {} to {}'.format(
+            self.current_depth, self.current_depth + 1))
+        self.current_depth += 1
+        self._current_depth.assign_add(1)
+
+    def restore_current_depth(self):
+        depth = self._current_depth.numpy()
+        if depth != self.current_depth:
+            logging.info('Changing depth from {} to {}'.format(
+                self.current_depth, depth))
+            self.current_depth = depth
