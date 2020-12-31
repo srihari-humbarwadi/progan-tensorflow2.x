@@ -1,6 +1,6 @@
-from absl import logging
 import numpy as np
 import tensorflow as tf
+from absl import logging
 
 from progressive_gan.model import (
     DiscriminatorDownsampleBlock, DiscriminatorFinalBlock, GeneratorBaseBlock,
@@ -56,8 +56,8 @@ class Generator(tf.keras.Model):
         for depth in range(self.min_depth, self.current_depth):
             y = self.blocks[str(depth)](y)
 
-        residual = \
-            self.upscale_2x(self.to_rgb_blocks[str(self.current_depth - 1)](y))
+        residual = self.to_rgb_blocks[str(self.current_depth - 1)](y)
+        residual = self.upscale_2x(residual)
 
         straight = self.blocks[str(self.current_depth)](y)
         straight = self.to_rgb_blocks[str(self.current_depth)](straight)
