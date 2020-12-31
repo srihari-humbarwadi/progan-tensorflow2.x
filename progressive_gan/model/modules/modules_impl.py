@@ -128,6 +128,10 @@ class DiscriminatorDownsampleBlock(tf.keras.layers.Layer):
     def __init__(self, filters, use_equalized_layers=True, **kwargs):
         super(DiscriminatorDownsampleBlock, self).__init__(**kwargs)
 
+        assert isinstance(
+            filters,
+            (list, tuple)
+        ), 'filters should be a list or a tuple'
         self.filters = filters
         self.use_equalized_layers = use_equalized_layers
 
@@ -139,13 +143,13 @@ class DiscriminatorDownsampleBlock(tf.keras.layers.Layer):
             name='{}-leaky-relu'.format(self.name))
 
         self.conv_1 = conv_layer(
-            filters=filters,
+            filters=filters[0],
             kernel_size=3,
             padding='same',
             name='{}-conv-3x3-1'.format(self.name))
 
         self.conv_2 = conv_layer(
-            filters=filters,
+            filters=filters[1],
             kernel_size=3,
             padding='same',
             name='{}-conv-3x3-2'.format(self.name))
@@ -156,7 +160,7 @@ class DiscriminatorDownsampleBlock(tf.keras.layers.Layer):
 
     def call(self, x):
         y = self.leaky_relu(self.conv_1(x))
-        y = self.leaky_relu(self.conv_1(y))
+        y = self.leaky_relu(self.conv_2(y))
         y = self.downsample_2x(y)
         return y
 
