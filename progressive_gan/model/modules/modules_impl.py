@@ -188,3 +188,30 @@ class DiscriminatorFinalBlock(tf.keras.layers.Layer):
         }
         base_config = super(DiscriminatorFinalBlock, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
+
+
+class FromRGBBlock(tf.keras.layers.Layer):
+
+    def __init__(self, filters, use_equalized_layers=True, **kwargs):
+        super(FromRGBBlock, self).__init__(**kwargs)
+
+        self.filters = filters
+        self.use_equalized_layers = use_equalized_layers
+
+        conv_layer = \
+            EqualizedConv2d if use_equalized_layers else tf.keras.layers.Conv2D
+
+        self.conv = conv_layer(filters=filters,
+                               kernel_size=1,
+                               name='{}-conv-1x1'.format(self.name))
+
+    def call(self, x):
+        return self.conv(x)
+
+    def get_config(self):
+        config = {
+            'filters': self.filters,
+            'use_equalized_layers': self.use_equalized_layers
+        }
+        base_config = super(FromRGBBlock, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
