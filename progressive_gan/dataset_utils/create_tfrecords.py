@@ -52,6 +52,11 @@ def write_tfrecords(image_paths, num_shards, output_dir, prefix):
 
 
 def main(_):
+    if not os.path.exists(FLAGS.log_dir):
+        os.mkdir(FLAGS.log_dir)
+
+    logging.get_absl_handler().use_absl_log_file('create_tfrecords')
+
     if not os.path.exists(FLAGS.output_dir):
         os.mkdir(FLAGS.output_dir)
 
@@ -72,5 +77,4 @@ def main(_):
 
 
 if __name__ == '__main__':
-    logging.get_absl_handler().use_absl_log_file()
     app.run(main)
