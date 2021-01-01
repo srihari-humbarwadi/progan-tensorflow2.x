@@ -21,7 +21,7 @@ class EqualizedConv2d(tf.keras.layers.Conv2D):
 
     def call(self, x):
         x = conv2d(input=x,
-                   filters=self.kernel / self.scale,
+                   filters=self.kernel * self.scale,
                    strides=self.strides,
                    padding=self.padding.upper(),
                    dilations=self.dilation_rate)
@@ -51,7 +51,7 @@ class EqualizedDense(tf.keras.layers.Dense):
 
     def call(self, x):
         x = dense(inputs=x,
-                  kernel=self.kernel / self.scale,
+                  kernel=self.kernel * self.scale,
                   bias=self.bias,
                   activation=self.activation,
                   dtype=self._compute_dtype_object)
